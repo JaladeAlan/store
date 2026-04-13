@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch full product + variant data from DB for security (never trust client prices)
-    const productIds = [...new Set(items.map((i: { productId: string }) => i.productId))];
+    const productIds = Array.from(new Set(items.map((i: { productId: string }) => i.productId)));
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('*, variants:product_variants(*), images:product_images(*)')

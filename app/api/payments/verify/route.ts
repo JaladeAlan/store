@@ -1,5 +1,6 @@
+// app/api/payments/verify/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { verifyPaystackTransaction } from '@/lib/paystack';
 import { verifyMonnifyTransaction } from '@/lib/monnify';
 
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    const adminSupabase = await createAdminClient(); // ✅ Use admin client for writes
 
     // Check our DB first
     const { data: payment } = await supabase
@@ -56,8 +58,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Payment not successful' });
     }
 
-    // Update payment + order status (webhook may not have fired yet)
-    const adminSupabase = supabase; // use service role via admin client if needed
     await adminSupabase
       .from('payments')
       .update({ status: 'paid', paid_at: new Date().toISOString() })
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       .update({ status: 'confirmed', updated_at: new Date().toISOString() })
       .eq('id', payment.order_id);
 
-    // Fetch updated order
+    // Fetch updated order (read-only, anon client is fine)
     const { data: order } = await supabase
       .from('orders')
       .select(`

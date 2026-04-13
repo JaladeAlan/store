@@ -1,3 +1,4 @@
+// components/shop/NewsletterBanner.tsx
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ export function NewsletterBanner() {
     setLoading(true);
     // Simulate API call
     await new Promise((r) => setTimeout(r, 800));
-    toast.success('Welcome to {appname}. Expect something special.');
+    toast.success(`Welcome to ${appname}. Expect something special.`);
     setEmail('');
     setLoading(false);
   };

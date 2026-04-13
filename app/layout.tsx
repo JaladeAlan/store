@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, DM_Sans } from 'next/font/google';
+import { Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import { NavigationLoader } from '@/components/layout/NavigationLoader';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -25,8 +27,7 @@ export const metadata: Metadata = {
     default: `${appname} — Premium Contemporary Fashion`,
     template: `%s | ${appname}`,
   },
-  description:
-    `Discover premium contemporary fashion at ${appname}. Curated collections of elevated essentials crafted for the discerning individual.`,
+  description: `Discover premium contemporary fashion at ${appname}. Curated collections of elevated essentials crafted for the discerning individual.`,
   keywords: ['fashion', 'luxury', 'clothing', 'premium', 'Nigeria', 'contemporary'],
   authors: [{ name: appname }],
   creator: appname,
@@ -90,6 +91,9 @@ export default function RootLayout({
             },
           }}
         />
+        <Suspense fallback={null}>
+          <NavigationLoader />
+        </Suspense>
       </body>
     </html>
   );

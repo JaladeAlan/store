@@ -1,3 +1,4 @@
+// app/checkout/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -112,8 +113,6 @@ export default function CheckoutPage() {
       const payData = await payRes.json();
       if (!payData.success) throw new Error(payData.error);
 
-      // Clear cart and redirect to payment
-      clearCart();
       window.location.href = payData.authorizationUrl;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to process checkout';

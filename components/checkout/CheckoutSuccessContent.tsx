@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { useCartStore } from '@/store/cart';
 import type { Order } from '@/types';
 
 type Status = 'loading' | 'success' | 'failed';
@@ -16,6 +17,8 @@ export function CheckoutSuccessContent() {
 
   const [status, setStatus] = useState<Status>('loading');
   const [order, setOrder] = useState<Order | null>(null);
+
+  const clearCart = useCartStore((s) => s.clearCart);
 
   useEffect(() => {
     if (!reference || !provider) {
@@ -31,6 +34,7 @@ export function CheckoutSuccessContent() {
         if (data.success) {
           setOrder(data.order);
           setStatus('success');
+          clearCart();
         } else {
           setStatus('failed');
         }
@@ -40,7 +44,7 @@ export function CheckoutSuccessContent() {
     };
 
     verify();
-  }, [reference, provider]);
+  }, [reference, provider, clearCart]);
 
   if (status === 'loading') {
     return (

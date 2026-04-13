@@ -1,3 +1,4 @@
+// lib/products.ts
 import { createClient } from '@/lib/supabase/server';
 import type { Product, ProductFilters, PaginatedResponse } from '@/types';
 
@@ -17,6 +18,17 @@ export async function getProducts(
     pageSize = 12,
   } = filters;
 
+  // ✅ Fix: resolve category slug → id first (PostgREST can't filter on joined table columns)
+  let categoryId: string | null = null;
+  if (category) {
+    const { data: cat } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', category)
+      .single();
+    categoryId = cat?.id ?? null;
+  }
+
   let query = supabase
     .from('products')
     .select(
@@ -30,8 +42,9 @@ export async function getProducts(
     )
     .eq('status', 'active');
 
-  if (category) {
-    query = query.eq('categories.slug', category);
+  // ✅ Fix: filter by resolved category_id, not joined slug
+  if (categoryId) {
+    query = query.eq('category_id', categoryId);
   }
 
   if (minPrice !== undefined) {

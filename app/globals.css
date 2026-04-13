@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-ivory: #FAF9F6;
+    --color-sand: #E8E0D5;
+    --color-stone: #C4B9AA;
+    --color-espresso: #3D2B1F;
+    --color-ink: #1A1A1A;
+    --color-gold: #B8975A;
+    --color-gold-light: #D4B483;
+    --color-gold-dark: #8B6F3A;
+    --color-blush: #F2EBE4;
+  }
+
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-ivory);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-stone);
+    border-radius: 0;
+  }
+
+  ::selection {
+    background-color: var(--color-gold-light);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center bg-ink text-ivory px-8 py-3.5 text-xs tracking-widest uppercase font-body font-medium transition-all duration-300 hover:bg-espresso active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center border border-ink text-ink px-8 py-3.5 text-xs tracking-widest uppercase font-body font-medium transition-all duration-300 hover:bg-ink hover:text-ivory active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center bg-gold text-ivory px-8 py-3.5 text-xs tracking-widest uppercase font-body font-medium transition-all duration-300 hover:bg-gold-dark active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply w-full border border-sand bg-transparent px-4 py-3 text-sm font-body text-ink placeholder-stone focus:outline-none focus:border-ink transition-colors duration-200;
+  }
+
+  .label {
+    @apply block text-xs tracking-widest uppercase font-body font-medium text-ink mb-2;
+  }
+
+  .section-title {
+    @apply font-display text-3xl md:text-4xl text-ink leading-tight;
+  }
+
+  .section-subtitle {
+    @apply text-xs tracking-widest uppercase text-stone font-body;
+  }
+
+  .price {
+    @apply font-body text-ink font-medium;
+  }
+
+  .price-compare {
+    @apply font-body text-stone line-through;
+  }
+
+  .badge {
+    @apply inline-block text-[10px] tracking-widest uppercase font-body font-medium px-2 py-0.5;
+  }
+
+  .badge-sale {
+    @apply badge bg-ink text-ivory;
+  }
+
+  .badge-new {
+    @apply badge bg-gold text-ivory;
+  }
+
+  .badge-out {
+    @apply badge bg-stone text-ivory;
+  }
+
+  .divider {
+    @apply border-t border-sand;
+  }
+
+  .container-luxe {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-sand) 25%,
+      var(--color-blush) 50%,
+      var(--color-sand) 75%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  /* Gold underline animation */
+  .hover-underline {
+    @apply relative;
+  }
+
+  .hover-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-px bg-gold transition-all duration-300;
+  }
+
+  .hover-underline:hover::after {
+    @apply w-full;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+
+  .font-body {
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+  }
+}
+
+/* Page transition */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.4s ease-out forwards;
+}

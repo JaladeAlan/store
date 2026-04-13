@@ -24,7 +24,7 @@ export async function PATCH(
     return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
   }
 
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('orders')
     .update({ status, updated_at: new Date().toISOString() })
@@ -42,7 +42,7 @@ export async function GET(
   if (!admin) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from('orders')

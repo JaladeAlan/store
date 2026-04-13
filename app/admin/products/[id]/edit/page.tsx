@@ -1,4 +1,3 @@
-// app/admin/products/[id]/edit/page.tsx
 import { notFound } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ProductForm } from '@/components/admin/ProductForm';

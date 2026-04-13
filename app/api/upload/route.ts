@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 export async function POST(request: NextRequest) {
@@ -14,7 +13,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check admin role
     const { data: profile } = await supabase
       .from('users')
       .select('role')
@@ -34,15 +32,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ success: false, error: 'Invalid file type. Only JPEG, PNG, WebP allowed.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Invalid file type. Only JPEG, PNG, WebP allowed.' },
+        { status: 400 }
+      );
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ success: false, error: 'File too large. Max 5MB.' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'File too large. Max 5 MB.' },
+        { status: 400 }
+      );
     }
 
-    const adminSupabase = await createAdminClient();
-    const ext = file.name.split('.').pop() || 'jpg';
+    const adminSupabase = createAdminClient();
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
 
     const { data, error } = await adminSupabase.storage

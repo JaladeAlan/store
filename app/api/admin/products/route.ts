@@ -17,10 +17,13 @@ export async function GET(request: NextRequest) {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const status = searchParams.get('status');
 
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from('products')
-    .select('*, category:categories(name), images:product_images(*), variants:product_variants(*)', { count: 'exact' })
+    .select(
+      '*, categories:categories!product_categories(*), images:product_images(*), variants:product_variants(*)',
+      { count: 'exact' }
+    )
     .order('created_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
 
@@ -38,14 +41,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, slug, description, price, compare_at_price, category_id, status,
-            featured, sku, tags, variants, images } = body;
+    const {
+      name, slug, description, price, compare_at_price,
+      category_ids = [], // array of category IDs
+      status, featured, sku, tags, variants, images,
+    } = body;
 
     if (!name || !price) {
       return NextResponse.json({ success: false, error: 'Name and price are required' }, { status: 400 });
     }
 
-    const supabase = await createAdminClient();
+    const supabase = createAdminClient();
     const finalSlug = slug || slugify(name);
 
     // Check slug uniqueness
@@ -56,18 +62,41 @@ export async function POST(request: NextRequest) {
 
     const { data: product, error: productError } = await supabase
       .from('products')
-      .insert({ name, slug: finalSlug, description, price, compare_at_price, category_id: category_id || null,
-                status: status || 'draft', featured: featured || false, sku: sku || null, tags: tags || [] })
+      .insert({
+        name,
+        slug: finalSlug,
+        description,
+        price,
+        compare_at_price: compare_at_price || null,
+        // keep category_id as the primary for backward compat (first selected)
+        category_id: category_ids[0] || null,
+        status: status || 'draft',
+        featured: featured || false,
+        sku: sku || null,
+        tags: tags || [],
+      })
       .select()
       .single();
 
     if (productError) throw productError;
 
+    // Insert category junction rows
+    if (category_ids.length > 0) {
+      const junctionRows = category_ids.map((cid: string) => ({
+        product_id: product.id,
+        category_id: cid,
+      }));
+      await supabase.from('product_categories').insert(junctionRows);
+    }
+
     // Insert variants
     if (variants?.length > 0) {
       const variantRows = variants.map((v: { size: string; color: string; stock_quantity: number; sku: string }) => ({
-        product_id: product.id, size: v.size, color: v.color || null,
-        stock_quantity: v.stock_quantity || 0, sku: v.sku || null,
+        product_id: product.id,
+        size: v.size,
+        color: v.color || null,
+        stock_quantity: v.stock_quantity || 0,
+        sku: v.sku || null,
       }));
       const { error: variantsError } = await supabase.from('product_variants').insert(variantRows);
       if (variantsError) throw variantsError;
@@ -76,8 +105,11 @@ export async function POST(request: NextRequest) {
     // Insert images
     if (images?.length > 0) {
       const imageRows = images.map((img: { url: string; is_primary: boolean; sort_order: number }, i: number) => ({
-        product_id: product.id, url: img.url, is_primary: img.is_primary || i === 0,
-        sort_order: img.sort_order ?? i, alt_text: name,
+        product_id: product.id,
+        url: img.url,
+        is_primary: img.is_primary || i === 0,
+        sort_order: img.sort_order ?? i,
+        alt_text: name,
       }));
       const { error: imagesError } = await supabase.from('product_images').insert(imageRows);
       if (imagesError) throw imagesError;

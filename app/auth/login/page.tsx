@@ -1,31 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/account/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otpMode, setOtpMode] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
 
   const supabase = createClient();
+  const appname = process.env.NEXT_PUBLIC_APP_NAME;
 
   const handleEmailPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      toast.error(error.message);
+      // Make common errors friendlier
+      if (error.message.toLowerCase().includes('invalid login')) {
+        toast.error('Incorrect email or password');
+      } else if (error.message.toLowerCase().includes('email not confirmed')) {
+        toast.error('Please verify your email first');
+        router.push('/auth/verify?email=' + encodeURIComponent(email));
+      } else {
+        toast.error(error.message);
+      }
     } else {
       toast.success('Welcome back!');
       router.push(redirectTo);
@@ -68,8 +79,6 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const appname = process.env.NEXT_PUBLIC_APP_NAME;
-
   return (
     <div className="min-h-screen flex items-center justify-center py-16 px-4">
       <div className="w-full max-w-sm">
@@ -82,6 +91,7 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Tab switcher */}
         <div className="flex border border-sand mb-8">
           <button
             onClick={() => setOtpMode(false)}
@@ -101,7 +111,8 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {!otpMode ? (
+        {/* Password login */}
+        {!otpMode && (
           <form onSubmit={handleEmailPassword} className="space-y-4">
             <div>
               <label className="label">Email Address</label>
@@ -116,18 +127,31 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="label">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-field pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone hover:text-ink transition-colors duration-200"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
             </div>
 
             <div className="flex justify-end">
-              <Link href="/auth/forgot-password" className="text-xs text-stone hover:text-ink font-body transition-colors duration-200">
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs text-stone hover:text-ink font-body transition-colors duration-200"
+              >
                 Forgot password?
               </Link>
             </div>
@@ -136,7 +160,10 @@ export default function LoginPage() {
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
-        ) : !otpSent ? (
+        )}
+
+        {/* Magic link — send OTP */}
+        {otpMode && !otpSent && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
               <label className="label">Email Address</label>
@@ -153,10 +180,14 @@ export default function LoginPage() {
               {loading ? 'Sending…' : 'Send Magic Link'}
             </button>
           </form>
-        ) : (
+        )}
+
+        {/* Magic link — verify OTP */}
+        {otpMode && otpSent && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <p className="text-xs text-stone font-body text-center">
-              Enter the 6-digit code sent to <strong className="text-ink">{email}</strong>
+              Enter the 6-digit code sent to{' '}
+              <strong className="text-ink">{email}</strong>
             </p>
             <div>
               <label className="label">Verification Code</label>
@@ -164,18 +195,19 @@ export default function LoginPage() {
                 type="text"
                 required
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 className="input-field text-center tracking-[0.5em] text-lg"
                 placeholder="000000"
                 maxLength={6}
+                autoFocus
               />
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full">
+            <button type="submit" disabled={loading || otp.length < 6} className="btn-primary w-full disabled:opacity-50">
               {loading ? 'Verifying…' : 'Verify Code'}
             </button>
             <button
               type="button"
-              onClick={() => setOtpSent(false)}
+              onClick={() => { setOtpSent(false); setOtp(''); }}
               className="w-full text-xs text-stone hover:text-ink font-body transition-colors duration-200"
             >
               Use a different email
@@ -191,5 +223,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-ink border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

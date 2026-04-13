@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Manage Products' };
 
 export default async function AdminProductsPage() {
+  // createAdminClient is synchronous — no await needed
   const supabase = createAdminClient();
 
   const { data: products } = await supabase

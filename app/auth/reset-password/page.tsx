@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
 
-// Password requirements
 const requirements = [
   { label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
   { label: 'Uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
@@ -25,50 +24,79 @@ function getStrength(password: string): { score: number; label: string; color: s
   return { score: passed, label: 'Very strong', color: 'bg-green-500' };
 }
 
-export default function RegisterPage() {
+function ResetPasswordContent() {
   const router = useRouter();
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const supabase = createClient();
-  const strength = getStrength(form.password);
   const appname = process.env.NEXT_PUBLIC_APP_NAME;
+  const strength = getStrength(password);
+
+  // Supabase sends the user here with a session after clicking the email link.
+  // We listen for PASSWORD_RECOVERY event to confirm we have a valid session.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setReady(true);
+      }
+    });
+
+    // Also check if session already exists (page reload after email click)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
+    if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    const failedReqs = requirements.filter((r) => !r.test(form.password));
+    const failedReqs = requirements.filter((r) => !r.test(password));
     if (failedReqs.length > 0) {
       toast.error(`Password must include: ${failedReqs[0].label.toLowerCase()}`);
       return;
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: { full_name: form.fullName },
-        emailRedirectTo: `${window.location.origin}/auth/verify`,
-      },
-    });
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Account created! Check your email to verify.');
-      router.push('/auth/verify?email=' + encodeURIComponent(form.email));
+      toast.success('Password updated successfully!');
+      router.push('/account/dashboard');
     }
     setLoading(false);
   };
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-6 h-6 border-2 border-ink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-stone font-body">Validating reset link…</p>
+          <p className="text-xs text-stone font-body mt-2">
+            If this takes too long,{' '}
+            <Link href="/auth/forgot-password" className="text-ink hover:text-gold transition-colors duration-200">
+              request a new link
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-16 px-4">
@@ -78,47 +106,24 @@ export default function RegisterPage() {
             {appname}
           </Link>
           <p className="text-stone text-xs tracking-widest uppercase font-body mt-4">
-            Create your account
+            Set a new password
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label">Full Name</label>
-            <input
-              type="text"
-              required
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="input-field"
-              placeholder="John Doe"
-            />
-          </div>
-
-          <div>
-            <label className="label">Email Address</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="input-field"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="label">Password</label>
+            <label className="label">New Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 className="input-field pr-10"
                 placeholder="Create a strong password"
+                autoFocus
               />
               <button
                 type="button"
@@ -131,7 +136,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Strength bar */}
-            {form.password.length > 0 && (
+            {password.length > 0 && (
               <div className="mt-2 space-y-2">
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -150,10 +155,10 @@ export default function RegisterPage() {
             )}
 
             {/* Requirements checklist */}
-            {(passwordFocused || form.password.length > 0) && (
+            {(passwordFocused || password.length > 0) && (
               <ul className="mt-2 space-y-1">
                 {requirements.map((req) => {
-                  const passed = req.test(form.password);
+                  const passed = req.test(password);
                   return (
                     <li key={req.label} className="flex items-center gap-2">
                       {passed ? (
@@ -172,21 +177,21 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="label">Confirm Password</label>
+            <label className="label">Confirm New Password</label>
             <div className="relative">
               <input
                 type={showConfirm ? 'text' : 'password'}
                 required
-                value={form.confirmPassword}
-                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`input-field pr-10 ${
-                  form.confirmPassword && form.confirmPassword !== form.password
+                  confirmPassword && confirmPassword !== password
                     ? 'border-red-300 focus:border-red-500'
-                    : form.confirmPassword && form.confirmPassword === form.password
+                    : confirmPassword && confirmPassword === password
                     ? 'border-green-400'
                     : ''
                 }`}
-                placeholder="Repeat password"
+                placeholder="Repeat new password"
               />
               <button
                 type="button"
@@ -197,7 +202,7 @@ export default function RegisterPage() {
                 {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
-            {form.confirmPassword && form.confirmPassword !== form.password && (
+            {confirmPassword && confirmPassword !== password && (
               <p className="text-[11px] text-red-500 font-body mt-1">Passwords do not match</p>
             )}
           </div>
@@ -205,25 +210,24 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading || strength.score < 3}
-            className="btn-primary w-full mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Creating Account…' : 'Create Account'}
+            {loading ? 'Updating…' : 'Update Password'}
           </button>
-
-          {strength.score < 3 && form.password.length > 0 && (
-            <p className="text-[11px] text-stone font-body text-center">
-              Please create a stronger password before continuing
-            </p>
-          )}
         </form>
-
-        <p className="text-center text-xs text-stone font-body mt-8">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="text-ink hover:text-gold transition-colors duration-200">
-            Sign in
-          </Link>
-        </p>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-ink border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

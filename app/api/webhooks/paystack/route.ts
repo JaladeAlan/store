@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
 
     const rawBody = await request.text();
 
-    // Verify webhook signature
     const isValid = verifyPaystackWebhook(rawBody, signature);
     if (!isValid) {
       console.error('Invalid Paystack webhook signature');
@@ -19,11 +18,11 @@ export async function POST(request: NextRequest) {
     }
 
     const event = JSON.parse(rawBody);
-    const supabase = await createAdminClient();
+    const supabase = createAdminClient();
 
     switch (event.event) {
       case 'charge.success': {
-        const { reference, status, amount, paid_at, metadata } = event.data;
+        const { reference, status, paid_at, metadata } = event.data;
 
         if (status !== 'success') break;
 
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
         const orderId = metadata?.order_id;
         if (!orderId) break;
 
-        // Update payment record
         await supabase
           .from('payments')
           .update({
@@ -47,7 +45,6 @@ export async function POST(request: NextRequest) {
           })
           .eq('reference', reference);
 
-        // Update order status
         await supabase
           .from('orders')
           .update({
@@ -62,12 +59,10 @@ export async function POST(request: NextRequest) {
 
       case 'charge.failed': {
         const { reference } = event.data;
-
         await supabase
           .from('payments')
           .update({ status: 'failed', provider_response: event.data })
           .eq('reference', reference);
-
         break;
       }
 

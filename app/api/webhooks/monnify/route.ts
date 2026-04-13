@@ -18,12 +18,12 @@ export async function POST(request: NextRequest) {
     }
 
     const event = JSON.parse(rawBody);
-    const supabase = await createAdminClient();
+    const supabase = createAdminClient();
 
     const { eventType, eventData } = event;
 
     if (eventType === 'SUCCESSFUL_TRANSACTION') {
-      const { paymentReference, transactionReference, amountPaid, paidOn } = eventData;
+      const { paymentReference, transactionReference, paidOn } = eventData;
 
       // Verify with Monnify API
       const verification = await verifyMonnifyTransaction(transactionReference);
@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true });
       }
 
-      // Find payment by reference
       const { data: payment } = await supabase
         .from('payments')
         .select('id, order_id')
@@ -61,7 +60,6 @@ export async function POST(request: NextRequest) {
       }
     } else if (eventType === 'FAILED_TRANSACTION') {
       const { paymentReference } = eventData;
-
       await supabase
         .from('payments')
         .update({ status: 'failed', provider_response: eventData })

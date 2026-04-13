@@ -11,7 +11,7 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   const page = Number(params.page || 1);
   const pageSize = 20;
 

@@ -17,9 +17,8 @@ export async function createClient() {
           cookieStore.set(name, value, options)
         );
       } catch {
-        // In case we're in an environment where cookies can't be set (like API routes),
-        // we catch the error to prevent the entire request from failing. The client will still work,
-        // but without the ability to persist sessions across requests. --- IGNORE ---
+        // In environments where cookies can't be set (e.g. read-only RSC),
+        // we swallow the error — the client still works for reads.
       }
     },
   };
@@ -31,6 +30,11 @@ export async function createClient() {
   );
 }
 
+/**
+ * Service-role client — bypasses RLS. Use only in trusted server contexts
+ * (API routes, webhooks, server actions). Never expose to the browser.
+ *
+ */
 export function createAdminClient() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
@@ -44,7 +48,6 @@ export function createAdminClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
-        // Prevent the admin client from persisting or auto-refreshing any session.
         autoRefreshToken: false,
         persistSession: false,
         detectSessionInUrl: false,

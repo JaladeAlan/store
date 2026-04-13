@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Manage Users' };
 
 export default async function AdminUsersPage() {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   const { data: users, count } = await supabase
     .from('users')

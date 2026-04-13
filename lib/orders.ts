@@ -27,7 +27,6 @@ export async function createOrder(
     country: formData.country,
   };
 
-  // Create order
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
@@ -47,7 +46,6 @@ export async function createOrder(
 
   if (orderError) throw orderError;
 
-  // Create order items
   const orderItems = cartItems.map((item) => ({
     order_id: order.id,
     product_id: item.product.id,
@@ -63,9 +61,10 @@ export async function createOrder(
 
   if (itemsError) throw itemsError;
 
-  // Decrement stock
+  // Decrement stock using service-role client (bypasses RLS)
+  const adminSupabase = createAdminClient();
   for (const item of cartItems) {
-    await supabase.rpc('decrement_stock', {
+    await adminSupabase.rpc('decrement_stock', {
       variant_id: item.variant.id,
       quantity: item.quantity,
     });
@@ -79,8 +78,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 
   const { data, error } = await supabase
     .from('orders')
-    .select(
-      `
+    .select(`
       *,
       items:order_items(
         *,
@@ -88,8 +86,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
         variant:product_variants(size, color)
       ),
       payment:payments(*)
-    `
-    )
+    `)
     .eq('id', orderId)
     .single();
 
@@ -102,16 +99,14 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
 
   const { data, error } = await supabase
     .from('orders')
-    .select(
-      `
+    .select(`
       *,
       items:order_items(
         *,
         product:products(name, slug, images:product_images(url, is_primary))
       ),
       payment:payments(status, provider)
-    `
-    )
+    `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -123,7 +118,7 @@ export async function updateOrderStatus(
   orderId: string,
   status: string
 ): Promise<void> {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from('orders')
@@ -138,18 +133,15 @@ export async function getAdminOrders(
   pageSize = 20,
   status?: string
 ) {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   let query = supabase
     .from('orders')
-    .select(
-      `
+    .select(`
       *,
       user:users(full_name, email),
       payment:payments(status, provider)
-    `,
-      { count: 'exact' }
-    )
+    `, { count: 'exact' })
     .order('created_at', { ascending: false });
 
   if (status) {

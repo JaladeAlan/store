@@ -5,9 +5,8 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Admin Dashboard' };
 
 export default async function AdminDashboardPage() {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
-  // Fetch stats in parallel
   const [
     { count: totalOrders },
     { count: totalProducts },
@@ -29,10 +28,10 @@ export default async function AdminDashboardPage() {
     .limit(10);
 
   const stats = [
-    { label: 'Total Revenue', value: formatPrice(totalRevenue), color: 'bg-gold/10 text-gold-dark' },
-    { label: 'Total Orders', value: totalOrders ?? 0, color: 'bg-blue-50 text-blue-700' },
-    { label: 'Active Products', value: totalProducts ?? 0, color: 'bg-green-50 text-green-700' },
-    { label: 'Customers', value: totalUsers ?? 0, color: 'bg-purple-50 text-purple-700' },
+    { label: 'Total Revenue', value: formatPrice(totalRevenue), color: 'text-gold-dark' },
+    { label: 'Total Orders', value: totalOrders ?? 0, color: 'text-blue-700' },
+    { label: 'Active Products', value: totalProducts ?? 0, color: 'text-green-700' },
+    { label: 'Customers', value: totalUsers ?? 0, color: 'text-purple-700' },
   ];
 
   return (
@@ -47,7 +46,7 @@ export default async function AdminDashboardPage() {
         {stats.map(({ label, value, color }) => (
           <div key={label} className="bg-white border border-sand p-5">
             <p className="text-xs tracking-widest uppercase text-stone font-body mb-2">{label}</p>
-            <p className={`font-display text-2xl ${color.split(' ')[1]}`}>{value}</p>
+            <p className={`font-display text-2xl ${color}`}>{value}</p>
           </div>
         ))}
       </div>
@@ -72,14 +71,17 @@ export default async function AdminDashboardPage() {
               {recentOrders?.map((order) => (
                 <tr key={order.id} className="border-t border-sand hover:bg-blush/50 transition-colors duration-200">
                   <td className="py-3 px-4 font-medium">#{order.order_number}</td>
-                  <td className="py-3 px-4 text-stone">{(order.user as { full_name?: string; email?: string } | null)?.full_name || (order.user as { email?: string } | null)?.email}</td>
+                  <td className="py-3 px-4 text-stone">
+                    {(order.user as { full_name?: string; email?: string } | null)?.full_name ||
+                     (order.user as { email?: string } | null)?.email}
+                  </td>
                   <td className="py-3 px-4">{formatPrice(order.total)}</td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-0.5 text-[10px] tracking-widest uppercase rounded-sm ${
                       order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                       order.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
-                      order.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                      'bg-gray-100 text-gray-600'
+                      order.status === 'pending'   ? 'bg-amber-100 text-amber-700' :
+                                                     'bg-gray-100 text-gray-600'
                     }`}>
                       {order.status}
                     </span>

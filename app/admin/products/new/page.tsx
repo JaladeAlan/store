@@ -1,4 +1,3 @@
-// app/admin/products/new/page.tsx
 import { createAdminClient } from '@/lib/supabase/server';
 import { ProductForm } from '@/components/admin/ProductForm';
 import type { Metadata } from 'next';

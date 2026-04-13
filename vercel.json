@@ -3,19 +3,5 @@
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
-  "regions": ["iad1"],
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY": "@paystack_public_key",
-    "PAYSTACK_SECRET_KEY": "@paystack_secret_key",
-    "PAYSTACK_WEBHOOK_SECRET": "@paystack_webhook_secret",
-    "MONNIFY_API_KEY": "@monnify_api_key",
-    "MONNIFY_SECRET_KEY": "@monnify_secret_key",
-    "MONNIFY_CONTRACT_CODE": "@monnify_contract_code",
-    "MONNIFY_WEBHOOK_SECRET": "@monnify_webhook_secret",
-    "NEXT_PUBLIC_APP_URL": "@app_url",
-    "RESEND_API_KEY": "@resend_api_key"
-  }
+  "regions": ["iad1"]
 }

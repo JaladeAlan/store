@@ -26,7 +26,7 @@ export function HeroSection() {
         <div className="max-w-2xl">
           {/* Eyebrow */}
           <p className="text-gold-light text-xs tracking-[0.35em] uppercase font-body mb-6 animate-fade-up">
-            New Arrivals — 2025
+            New Arrivals — {new Date().getFullYear()} 
           </p>
 
           {/* Headline */}

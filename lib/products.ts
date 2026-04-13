@@ -18,7 +18,6 @@ export async function getProducts(
     pageSize = 12,
   } = filters;
 
-  // ✅ Fix: resolve category slug → id first (PostgREST can't filter on joined table columns)
   let categoryId: string | null = null;
   if (category) {
     const { data: cat } = await supabase
@@ -34,7 +33,7 @@ export async function getProducts(
     .select(
       `
       *,
-      category:categories(*),
+      categories:categories!product_categories(*),
       images:product_images(*),
       variants:product_variants(*)
     `,
@@ -42,52 +41,24 @@ export async function getProducts(
     )
     .eq('status', 'active');
 
-  // ✅ Fix: filter by resolved category_id, not joined slug
-  if (categoryId) {
-    query = query.eq('category_id', categoryId);
-  }
+  if (categoryId) query = query.eq('category_id', categoryId);
+  if (minPrice !== undefined) query = query.gte('price', minPrice);
+  if (maxPrice !== undefined) query = query.lte('price', maxPrice);
+  if (featured !== undefined) query = query.eq('featured', featured);
+  if (search) query = query.ilike('name', `%${search}%`);
+  if (sizes && sizes.length > 0) query = query.in('product_variants.size', sizes);
 
-  if (minPrice !== undefined) {
-    query = query.gte('price', minPrice);
-  }
-
-  if (maxPrice !== undefined) {
-    query = query.lte('price', maxPrice);
-  }
-
-  if (featured !== undefined) {
-    query = query.eq('featured', featured);
-  }
-
-  if (search) {
-    query = query.ilike('name', `%${search}%`);
-  }
-
-  if (sizes && sizes.length > 0) {
-    query = query.in('product_variants.size', sizes);
-  }
-
-  // Sorting
   switch (sort) {
-    case 'price-asc':
-      query = query.order('price', { ascending: true });
-      break;
-    case 'price-desc':
-      query = query.order('price', { ascending: false });
-      break;
-    case 'name-asc':
-      query = query.order('name', { ascending: true });
-      break;
-    default:
-      query = query.order('created_at', { ascending: false });
+    case 'price-asc':  query = query.order('price', { ascending: true });  break;
+    case 'price-desc': query = query.order('price', { ascending: false }); break;
+    case 'name-asc':   query = query.order('name',  { ascending: true });  break;
+    default:           query = query.order('created_at', { ascending: false });
   }
 
   const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-  query = query.range(from, to);
+  query = query.range(from, from + pageSize - 1);
 
   const { data, error, count } = await query;
-
   if (error) throw error;
 
   return {
@@ -107,7 +78,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     .select(
       `
       *,
-      category:categories(*),
+      categories:categories!product_categories(*),
       images:product_images(*),
       variants:product_variants(*)
     `
@@ -128,7 +99,7 @@ export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
     .select(
       `
       *,
-      category:categories(*),
+      categories:categories!product_categories(*),
       images:product_images(*),
       variants:product_variants(*)
     `
@@ -154,7 +125,7 @@ export async function getRelatedProducts(
     .select(
       `
       *,
-      category:categories(*),
+      categories:categories!product_categories(*),
       images:product_images(*),
       variants:product_variants(*)
     `
@@ -164,9 +135,7 @@ export async function getRelatedProducts(
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (categoryId) {
-    query = query.eq('category_id', categoryId);
-  }
+  if (categoryId) query = query.eq('category_id', categoryId);
 
   const { data, error } = await query;
   if (error) return [];
@@ -178,12 +147,7 @@ export async function searchProducts(query: string, limit = 10): Promise<Product
 
   const { data, error } = await supabase
     .from('products')
-    .select(
-      `
-      *,
-      images:product_images(url, is_primary)
-    `
-    )
+    .select(`*, images:product_images(url, is_primary)`)
     .eq('status', 'active')
     .or(`name.ilike.%${query}%,description.ilike.%${query}%,tags.cs.{${query}}`)
     .limit(limit);

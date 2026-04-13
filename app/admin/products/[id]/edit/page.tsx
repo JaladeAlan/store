@@ -1,3 +1,4 @@
+// app/admin/products/[id]/edit/page.tsx
 import { notFound } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ProductForm } from '@/components/admin/ProductForm';
@@ -11,15 +12,23 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   const [{ data: product }, { data: categories }] = await Promise.all([
     supabase
       .from('products')
-      .select('*, images:product_images(*), variants:product_variants(*)')
+      .select(`
+        *,
+        categories:categories!product_categories(id, name, slug),
+        images:product_images(*),
+        variants:product_variants(*)
+      `)
       .eq('id', id)
       .single(),
-    supabase.from('categories').select('*').order('sort_order'),
+    supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order'),
   ]);
 
   if (!product) notFound();
@@ -30,7 +39,7 @@ export default async function EditProductPage({
         <h1 className="font-display text-3xl text-ink">Edit Product</h1>
         <p className="text-sm text-stone font-body mt-1">{product.name}</p>
       </div>
-      <ProductForm product={product} categories={categories || []} />
+      <ProductForm product={product as any} categories={categories || []} />
     </div>
   );
 }

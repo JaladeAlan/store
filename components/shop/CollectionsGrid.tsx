@@ -27,9 +27,9 @@ const fallbackCollections = [
   },
   {
     id: '4',
-    name: 'Footwear',
-    slug: 'footwear',
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80',
+    name: 'Headgear',
+    slug: 'headgear',
+    image: 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=600&q=80',
   },
 ];
 

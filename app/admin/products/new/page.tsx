@@ -1,3 +1,4 @@
+// app/admin/products/new/page.tsx
 import { createAdminClient } from '@/lib/supabase/server';
 import { ProductForm } from '@/components/admin/ProductForm';
 import type { Metadata } from 'next';
@@ -5,7 +6,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'New Product' };
 
 export default async function NewProductPage() {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   const { data: categories } = await supabase.from('categories').select('*').order('sort_order');
 
   return (

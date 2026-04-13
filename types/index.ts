@@ -38,6 +38,7 @@ export interface Product {
   price: number;
   compare_at_price: number | null;
   category_id: string | null;
+  categories?: Category[];
   status: ProductStatus;
   featured: boolean;
   tags: string[];

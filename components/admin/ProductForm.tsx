@@ -1,5 +1,7 @@
 'use client';
 
+// components/admin/ProductForm.tsx
+
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -25,11 +27,18 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     description: product?.description || '',
     price: product?.price || 0,
     compare_at_price: product?.compare_at_price || '',
-    category_id: product?.category_id || '',
     status: product?.status || 'draft',
     featured: product?.featured || false,
     sku: product?.sku || '',
     tags: product?.tags?.join(', ') || '',
+  });
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(() => {
+    if (product?.categories && product.categories.length > 0) {
+      return product.categories.map((c) => c.id).filter(Boolean) as string[];
+    }
+    if (product?.category_id) return [product.category_id];
+    return [];
   });
 
   const [variants, setVariants] = useState(
@@ -52,6 +61,12 @@ export function ProductForm({ product, categories }: ProductFormProps) {
 
   const handleNameChange = (name: string) => {
     setForm((f) => ({ ...f, name, slug: product ? f.slug : slugify(name) }));
+  };
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
   };
 
   const addVariant = () => {
@@ -131,6 +146,7 @@ export function ProductForm({ product, categories }: ProductFormProps) {
           price: Number(form.price),
           compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
           tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+          category_ids: selectedCategoryIds,
           variants,
           images: images.filter((img) => !img.uploading).map((img, i) => ({
             url: img.url,
@@ -209,14 +225,39 @@ export function ProductForm({ product, categories }: ProductFormProps) {
               placeholder="casual, oversized, cotton"
             />
           </div>
+
+          {/* Multi-category checkboxes — replaces single <select> */}
           <div>
-            <label className="label">Category</label>
-            <select value={form.category_id} onChange={(e) => update('category_id', e.target.value)} className="input-field">
-              <option value="">No Category</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <label className="label">
+              Categories
+              {selectedCategoryIds.length > 0 && (
+                <span className="ml-2 text-[10px] text-gold normal-case tracking-normal">
+                  {selectedCategoryIds.length} selected
+                </span>
+              )}
+            </label>
+            {categories.length === 0 ? (
+              <p className="text-xs text-stone font-body">No categories yet.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-1">
+                {categories.map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex items-center gap-2 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategoryIds.includes(c.id)}
+                      onChange={() => toggleCategory(c.id)}
+                      className="w-4 h-4 accent-ink flex-shrink-0"
+                    />
+                    <span className="text-xs font-body text-stone group-hover:text-ink transition-colors duration-200">
+                      {c.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -271,7 +312,7 @@ export function ProductForm({ product, categories }: ProductFormProps) {
 
       {/* Images */}
       <section className="bg-white border border-sand p-6">
-        <h2 className="text-sm tracking-widests uppercase font-body font-medium text-ink mb-5">Images</h2>
+        <h2 className="text-sm tracking-widest uppercase font-body font-medium text-ink mb-5">Images</h2>
         <div className="flex flex-wrap gap-3 mb-4">
           {images.map((img, i) => (
             <div key={i} className="relative group w-24 h-28">

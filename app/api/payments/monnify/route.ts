@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       customerEmail: email,
       customerName,
       paymentReference: reference,
-      paymentDescription: `LUXE Order ${order.order_number}`,
+      paymentDescription: `${process.env.NEXT_PUBLIC_APP_NAME} Order ${order.order_number}`,
       orderId,
       redirectUrl,
     });

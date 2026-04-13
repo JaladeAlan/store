@@ -8,6 +8,8 @@ import { formatPrice, getShippingCost, getImageUrl, calculateDiscount } from '@/
 import type { CheckoutFormData } from '@/types';
 import toast from 'react-hot-toast';
 
+const appname = process.env.NEXT_PUBLIC_APP_NAME;
+
 const NIGERIAN_STATES = [
   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa',
   'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti',
@@ -53,7 +55,7 @@ export default function CheckoutPage() {
     if (!discountCode.trim()) return;
     setCheckingDiscount(true);
     try {
-      const res = await fetch(`/api/orders/discount?code=${discountCode}`);
+      const res = await fetch(`/api/orders/discount?code=${discountCode.trim()}`);
       const data = await res.json();
       if (data.success) {
         const amount = calculateDiscount(sub, data.discount);
@@ -359,7 +361,7 @@ export default function CheckoutPage() {
                       type="text"
                       value={discountCode}
                       onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                      placeholder="LUXE20"
+                      placeholder={`${appname || 'STORE'}20`}
                       className="input-field flex-1 text-xs"
                     />
                     <button

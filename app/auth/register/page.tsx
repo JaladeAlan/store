@@ -44,12 +44,13 @@ export default function RegisterPage() {
     setLoading(false);
   };
 
+  const appname = process.env.NEXT_PUBLIC_APP_NAME;
   return (
     <div className="min-h-screen flex items-center justify-center py-16 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <Link href="/" className="font-display text-3xl tracking-[0.25em] text-ink hover:text-gold transition-colors duration-300">
-            LUXE
+            {appname}
           </Link>
           <p className="text-stone text-xs tracking-widest uppercase font-body mt-4">
             Create your account

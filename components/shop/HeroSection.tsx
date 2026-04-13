@@ -11,7 +11,7 @@ export function HeroSection() {
       <div className="absolute inset-0">
         <Image
           src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1920&q=80"
-          alt="LUXE Hero"
+          alt="`${process.env.NEXT_PUBLIC_APP_NAME}` Hero"
           fill
           className="object-cover object-center opacity-60"
           priority

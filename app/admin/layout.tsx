@@ -13,6 +13,7 @@ const adminLinks = [
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const appname = process.env.NEXT_PUBLIC_APP_NAME;
 
   if (!user) redirect('/auth/login?redirectTo=/admin');
 
@@ -25,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="w-56 bg-ink text-ivory flex-shrink-0 flex flex-col">
         <div className="p-6 border-b border-stone/20">
           <Link href="/" className="font-display text-xl tracking-[0.2em] text-ivory hover:text-gold-light transition-colors duration-300">
-            LUXE
+            {appname}
           </Link>
           <p className="text-[10px] tracking-widest uppercase text-stone mt-1 font-body">Admin Panel</p>
         </div>

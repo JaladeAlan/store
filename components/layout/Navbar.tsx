@@ -137,7 +137,7 @@ export function Navbar() {
           />
           <div className="absolute top-0 left-0 bottom-0 w-80 bg-ivory flex flex-col animate-slide-in">
             <div className="flex items-center justify-between p-6 border-b border-sand">
-              <span className="font-display text-xl tracking-widest">LUXE</span>
+              <span className="font-display text-xl tracking-widest">{appname}</span>
               <button onClick={() => setIsMenuOpen(false)}>
                 <X size={20} />
               </button>

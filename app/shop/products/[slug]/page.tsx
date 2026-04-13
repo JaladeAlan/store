@@ -24,7 +24,7 @@ export async function generateMetadata({
     title: product.name,
     description:
       product.description ||
-      `Shop ${product.name} at LUXE. Premium contemporary fashion.`,
+      `Shop ${product.name} at ${process.env.NEXT_PUBLIC_APP_NAME}. Premium contemporary fashion.`,
     openGraph: {
       title: product.name,
       description: product.description || '',
@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     sku: product.sku,
     brand: {
       '@type': 'Brand',
-      name: 'LUXE',
+      name: `${process.env.NEXT_PUBLIC_APP_NAME}`,
     },
     offers: {
       '@type': 'Offer',

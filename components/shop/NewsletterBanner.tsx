@@ -4,6 +4,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 export function NewsletterBanner() {
+  const appname = process.env.NEXT_PUBLIC_APP_NAME;
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -13,7 +14,7 @@ export function NewsletterBanner() {
     setLoading(true);
     // Simulate API call
     await new Promise((r) => setTimeout(r, 800));
-    toast.success('Welcome to LUXE. Expect something special.');
+    toast.success('Welcome to {appname}. Expect something special.');
     setEmail('');
     setLoading(false);
   };
@@ -28,7 +29,7 @@ export function NewsletterBanner() {
           First to know. Always.
         </h2>
         <p className="text-stone text-sm font-body max-w-md mx-auto mb-10 leading-relaxed">
-          Join the LUXE inner circle for exclusive access to new arrivals, private
+          Join the {appname} inner circle for exclusive access to new arrivals, private
           sales, and curated style notes.
         </p>
 

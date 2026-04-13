@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Instagram, Twitter, Facebook } from 'lucide-react';
 
+const appname = process.env.NEXT_PUBLIC_APP_NAME;
+
 const footerLinks = {
   Shop: [
     { href: '/shop/products', label: 'All Products' },
@@ -15,7 +17,7 @@ const footerLinks = {
     { href: '/pages/faq', label: 'FAQ' },
   ],
   Company: [
-    { href: '/pages/about', label: 'About LUXE' },
+    { href: '/pages/about', label: `About ${appname}` },
     { href: '/pages/sustainability', label: 'Sustainability' },
     { href: '/pages/careers', label: 'Careers' },
     { href: '/pages/contact', label: 'Contact' },
@@ -23,7 +25,6 @@ const footerLinks = {
 };
 
 export function Footer() {
-  const appname = process.env.NEXT_PUBLIC_APP_NAME;
   return (
     <footer className="bg-ink text-ivory">
       {/* Main Footer */}
@@ -99,7 +100,7 @@ export function Footer() {
       <div className="border-t border-stone/20">
         <div className="container-luxe py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-stone font-body">
-            © {new Date().getFullYear()} LUXE. All rights reserved.
+            © {new Date().getFullYear()} {appname}. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <Link

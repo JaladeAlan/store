@@ -68,12 +68,14 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  const appname = process.env.NEXT_PUBLIC_APP_NAME;
+
   return (
     <div className="min-h-screen flex items-center justify-center py-16 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <Link href="/" className="font-display text-3xl tracking-[0.25em] text-ink hover:text-gold transition-colors duration-300">
-            LUXE
+            {appname}
           </Link>
           <p className="text-stone text-xs tracking-widest uppercase font-body mt-4">
             Sign in to your account
@@ -182,7 +184,7 @@ export default function LoginPage() {
         )}
 
         <p className="text-center text-xs text-stone font-body mt-8">
-          New to LUXE?{' '}
+          New to {appname}?{' '}
           <Link href="/auth/register" className="text-ink hover:text-gold transition-colors duration-200">
             Create an account
           </Link>
